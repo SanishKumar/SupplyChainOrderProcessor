@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package supplychain;
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/SanishKumar/SupplyChainOrderProcessor/protos;protos";
+
+message OrderItem {
+    string sku       = 1;
+    int32 quantity   = 2;
+}
+
+message OrderCreated {
+    string order_id = 1;
+    repeated OrderItem items = 2;
+}
+
+message InventoryReserved {
+    string order_id = 1;
+    bool success    = 2;
+}
+
+message ShipmentScheduled {
+    string order_id  = 1;
+    string shipment_id = 2;
+}
+
+// Request/response messages
+message CreateOrderRequest {
+    repeated OrderItem items = 1;
+}
+message CreateOrderResponse {
+    OrderCreated order = 1;
+}
+message GetOrderRequest {
+    string order_id = 1;
+}
+message GetOrderResponse {
+    OrderCreated order = 1;
+}
+message ReserveStockRequest {
+    string order_id = 1;
+}
+message ReserveStockResponse {
+    InventoryReserved result = 1;
+}
+message ReleaseStockRequest {
+    string order_id = 1;
+}
+message ReleaseStockResponse {
+    InventoryReserved result = 1;
+}
+message ScheduleShipmentRequest {
+    string order_id = 1;
+}
+message ScheduleShipmentResponse {
+    ShipmentScheduled result = 1;
+}
+
+// Order service with HTTP annotations
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse) {
+        option (google.api.http) = {
+            post: "/orders"
+            body: "*"
+        };
+    }
+    rpc GetOrder(GetOrderRequest) returns (GetOrderResponse) {
+        option (google.api.http) = {
+            get: "/orders/{order_id}"
+        };
+    }
+}
+
+// Inventory service (gRPC only)
+service InventoryService {
+    rpc ReserveStock(ReserveStockRequest) returns (ReserveStockResponse);
+    rpc ReleaseStock(ReleaseStockRequest) returns (ReleaseStockResponse);
+}
+
+// Dispatch service (gRPC only)
+service DispatchService {
+    rpc ScheduleShipment(ScheduleShipmentRequest) returns (ScheduleShipmentResponse);
+}
